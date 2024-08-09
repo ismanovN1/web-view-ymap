@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Yandex Map with Place Link on Click</title>
-    <script src="https://api-maps.yandex.ru/2.1/?apikey=0d85c950-dec2-47d5-903c-2c64cc4c973c&lang=ru_RU" type="text/javascript"></script>
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=0d85c950-dec2-47d5-903c-2c64cc4c973c&lang=ru_RU"
+        type="text/javascript"></script>
     <style>
         #map {
             height: 100vh;
@@ -12,6 +14,7 @@
         }
     </style>
 </head>
+
 <body>
     <div id="map"></div>
 
@@ -34,20 +37,30 @@
                     if (res.geoObjects.get(0)) {
                         const firstGeoObject = res.geoObjects.get(0);
                         const placeName = firstGeoObject.getAddressLine();
-                        
-                        // Generate Yandex Maps link
-                        const yandexMapsLink = `https://yandex.com/maps/?ll=${coords[1]},${coords[0]}&z=15`;
 
-                        alert(`You clicked at Latitude: ${coords[0]}, Longitude: ${coords[1]}\nPlace Name: ${placeName}\n\nView on Yandex Maps: ${yandexMapsLink}`);
-                        
-                        // Optionally, you could show the link in the HTML page
-                        const linkElement = document.createElement('a');
-                        linkElement.href = yandexMapsLink;
-                        linkElement.target = '_blank';
-                        linkElement.textContent = 'View this place on Yandex Maps';
-                        document.body.appendChild(linkElement);
+                        // Generate Yandex Maps link
+                        const yandexMapsLink =
+                            `https://yandex.com/maps/?ll=${coords[1]},${coords[0]}&z=15`;
+
+                        window.ReactNativeWebView.postMessage(
+                            JSON.stringify({
+                                type: "place_data",
+                                payload: {
+                                    coords,
+                                    placeName,
+                                    yandexMapsLink,
+                                }
+                            })
+                        )
                     } else {
-                        alert('Place name could not be found for this location.');
+                        window.ReactNativeWebView.postMessage(
+                            JSON.stringify({
+                                type: "place_data",
+                                payload: {
+                                    coords,
+                                }
+                            })
+                        )
                     }
                 }).catch(function (err) {
                     console.error('Geocoding failed: ', err);
@@ -56,4 +69,5 @@
         }
     </script>
 </body>
+
 </html>
