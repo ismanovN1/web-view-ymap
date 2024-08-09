@@ -24,7 +24,7 @@
         function init() {
             // Initialize the Yandex map
             const map = new ymaps.Map('map', {
-                center: [55.751244, 37.618423], // Default center (Moscow)
+                center: [41.31114946320573, 69.27976584102055], // Default center (Moscow)
                 zoom: 10
             });
 
@@ -53,11 +53,14 @@
                             })
                         )
                     } else {
+                        const yandexMapsLink =
+                            `https://yandex.com/maps/?ll=${coords[1]},${coords[0]}&z=15`;
                         window.ReactNativeWebView.postMessage(
                             JSON.stringify({
                                 type: "place_data",
                                 payload: {
                                     coords,
+                                    yandexMapsLink
                                 }
                             })
                         )
