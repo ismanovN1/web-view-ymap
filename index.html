@@ -5,12 +5,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Yandex Map with Place Link on Click</title>
-    <script src="https://api-maps.yandex.ru/2.1/?apikey=0d85c950-dec2-47d5-903c-2c64cc4c973c&lang=ru_RU"
+    <script src="https://api-maps.yandex.ru/v3/?apikey=0d85c950-dec2-47d5-903c-2c64cc4c973c&lang=ru_RU"
         type="text/javascript"></script>
     <style>
         #map {
             height: 100vh;
             width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
         }
     </style>
 </head>
@@ -19,28 +28,68 @@
     <div id="map"></div>
 
     <script type="text/javascript">
-        ymaps.ready(init);
+        const initMap = async () => {
+            await ymaps3.ready;
+            const center = [69.27969018961507, 41.31133298718927]
+            const zoom = 13;
+            const {
+                YMap,
+                YMapDefaultSchemeLayer,
+                YMapControls,
+                YMapDefaultFeaturesLayer,
+                YMapMarker,
+                YMapListener
+            } = ymaps3;
 
-        function init() {
-            // Initialize the Yandex map
-            const map = new ymaps.Map('map', {
-                center: [41.31114946320573, 69.27976584102055], // Default center (Moscow)
-                zoom: 10
+            const {
+                YMapDefaultMarker
+            } = await ymaps3.import('@yandex/ymaps3-markers@0.0.1');
+
+            const {
+                YMapZoomControl,
+                YMapGeolocationControl
+            } = await ymaps3.import('@yandex/ymaps3-controls@0.0.1');
+            const map = new YMap(document.getElementById('map'), {
+                location: {
+                    center: center,
+                    zoom: zoom
+                }
             });
 
-            // Add click event listener to the map
-            map.events.add('click', function (e) {
-                const coords = e.get('coords');
+            map.addChild(new YMapDefaultSchemeLayer());
+            map.addChild(new YMapDefaultFeaturesLayer());
 
-                // Reverse geocoding to get the place name
-                ymaps.geocode(coords).then(function (res) {
-                    if (res.geoObjects.get(0)) {
-                        const firstGeoObject = res.geoObjects.get(0);
-                        const placeName = firstGeoObject.getAddressLine();
+            let marker
+
+
+            const click = (object, event) => {
+
+                const coords = event.coordinates
+
+
+                if (!marker) {
+                    marker = new YMapDefaultMarker({
+                        coordinates: coords,
+                        color: '#00CC00'
+                    })
+                    map.addChild(marker);
+                } else
+                    marker.update({
+                        coordinates: coords
+                    });
+
+                ymaps3.search({
+                    'text': coords
+                }).then(function (res) {
+                    if (res[0]) {
+
+                        const firstGeoObject = res[0]
+                        const placeName = firstGeoObject.properties.name
 
                         // Generate Yandex Maps link
                         const yandexMapsLink =
                             `https://yandex.com/maps/?ll=${coords[1]},${coords[0]}&z=15`;
+
 
                         window.ReactNativeWebView.postMessage(
                             JSON.stringify({
@@ -65,11 +114,19 @@
                             })
                         )
                     }
-                }).catch(function (err) {
-                    console.error('Geocoding failed: ', err);
-                });
+
+
+                })
+            }
+
+            const mapListener = new YMapListener({
+                layer: 'any',
+                onFastClick: click,
+                onClick: click,
             });
-        }
+            map.addChild(mapListener);
+        };
+        initMap();
     </script>
 </body>
 
